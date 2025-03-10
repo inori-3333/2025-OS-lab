@@ -22,7 +22,7 @@
 #include "stats.h"
 
 #include "directory.h"
-
+#include<unistd.h>
 
 #define TransferSize 	10 	// make it small, just to be difficult
 
@@ -116,22 +116,22 @@ Append(char *from, char *to, int half)
 	 
     if ( (openFile = fileSystem->Open(to)) == NULL)
     {
-	// file "to" does not exits, then create one
-	if (!fileSystem->Create(to, 0)) 
-	{
-	    printf("Append: couldn't create the file %s to append\n", to);
-	    fclose(fp);
-	    return;
-	}
-	openFile = fileSystem->Open(to);
+        // file "to" does not exits, then create one
+        if (!fileSystem->Create(to, 0)) 
+        {
+            printf("Append: couldn't create the file %s to append\n", to);
+            fclose(fp);
+            return;
+        }
+	    openFile = fileSystem->Open(to);
     }
 
     ASSERT(openFile != NULL);
     // append from position "start"
     start = openFile->Length();
+    fileLength=openFile->Length(); // 新增代码 
     if (half) start = start / 2;
     openFile->Seek(start);
-    
 // Append the data in TransferSize chunks
     buffer = new char[TransferSize];
     while ((amountRead = fread(buffer, sizeof(char), TransferSize, fp)) > 0) 
@@ -139,16 +139,25 @@ Append(char *from, char *to, int half)
         int result;
 //	printf("start value: %d,  amountRead %d, ", start, amountRead);
 //	result = openFile->WriteAt(buffer, amountRead, start);
-	result = openFile->Write(buffer, amountRead);
+    result = openFile->Write(buffer, amountRead);
+    // 新增代码7行，判断result
+    if (result < 0)   //文件过大，或空闲磁盘块不足 
+    {
+        printf("\nERROR!!!!!!\n"); 
+        printf("Insuficient Disk Space, or File is Too Big!\n"); 
+        printf("Writting Terminated.\n\n"); 
+        break; 
+    }
 //	printf("result of write: %d\n", result);
-	ASSERT(result == amountRead);
-//	start += amountRead;
+    ASSERT(result == amountRead);
+    start += amountRead;// 新增代码 原本被注释起来了，现在取消注释
 //	ASSERT(start == openFile->Length());
     }
     delete [] buffer;
 
 // Write the inode back to the disk, because we have changed it
-// openFile->WriteBack();
+    openFile->WriteBack();//新增代码 将文件头写回硬盘
+    DEBUG('f',"inodes have been written back\n");// 新增代码
 //  printf("inodes have been written back\n");
     
 // Close the UNIX and the Nachos files
@@ -202,13 +211,17 @@ NAppend(char *from, char *to)
     if ( (openFileTo = fileSystem->Open(to)) == NULL)
     {
 	// file "to" does not exits, then create one
-	if (!fileSystem->Create(to, 0)) 
-	{
-	    printf("Append: couldn't create the file %s to append\n", to);
-	    delete openFileFrom;
-	    return;
-	}
-	openFileTo = fileSystem->Open(to);
+    if (!fileSystem->Create(to, 0)) 
+    {
+        /*注释代码 原打印内容
+        printf("Append: couldn't create the file %s to append\n", to);*/
+        // 新增代码2行，新打印内容
+        printf("Couldn't create destination file \"%s\" to append.\n", to); 
+        printf("File already exists, or file too big, or files on disk over 12, or insufficient disk space.\n"); 
+        delete openFileFrom;
+        return;
+    }
+    openFileTo = fileSystem->Open(to);
     }
 
     ASSERT(openFileTo != NULL);
@@ -216,6 +229,8 @@ NAppend(char *from, char *to)
     start = openFileTo->Length();
     openFileTo->Seek(start);
     
+    fileLength=openFileTo->Length(); // 新增代码
+
 // Append the data in TransferSize chunks
     buffer = new char[TransferSize];
     openFileFrom->Seek(0);
@@ -225,15 +240,24 @@ NAppend(char *from, char *to)
 //	printf("start value: %d,  amountRead %d, ", start, amountRead);
 //	result = openFile->WriteAt(buffer, amountRead, start);
 	result = openFileTo->Write(buffer, amountRead);
+    // 新增代码7行
+    if (result < 0) 
+    { 
+        printf("\nERROR!!!!!!\n"); 
+        printf("Insuficient Disk Space, or File is Too Big!\n"); 
+        printf("Writting Terminated.\n\n"); 
+        break; 
+    } 
 //	printf("result of write: %d\n", result);
 	ASSERT(result == amountRead);
-//	start += amountRead;
+	start += amountRead;//新增代码 原本被注释起来了，现在取消注释
 //	ASSERT(start == openFile->Length());
     }
     delete [] buffer;
 
 // Write the inode back to the disk, because we have changed it
-// openFileTo->WriteBack();
+    openFileTo->WriteBack();// 新增代码
+    DEBUG('f',"inodes have been written back\n");// 新增代码 
 // printf("inodes have been written back\n");
     
 // Close both Nachos files
@@ -286,7 +310,7 @@ Print(char *name)
 #define FileName 	"TestFile"
 #define Contents 	"1234567890"
 #define ContentSize 	strlen(Contents)
-#define FileSize 	((int)(ContentSize * 5000))
+#define FileSize 	((int)(ContentSize * 50))
 
 static void 
 FileWrite()
@@ -296,7 +320,7 @@ FileWrite()
 
     printf("Sequential write of %d byte file, in %d byte chunks\n", 
 	FileSize, ContentSize);
-    if (!fileSystem->Create(FileName, 0)) {
+    if (!fileSystem->Create(FileName, FileSize)) {
       printf("Perf test: can't create %s\n", FileName);
       return;
     }
@@ -307,7 +331,7 @@ FileWrite()
     }
     for (i = 0; i < FileSize; i += ContentSize) {
         numBytes = openFile->Write(Contents, ContentSize);
-	if (numBytes < 10) {
+        if (numBytes < 10) {
 	    printf("Perf test: unable to write %s\n", FileName);
 	    delete openFile;
 	    return;

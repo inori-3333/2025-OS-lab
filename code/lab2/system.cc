@@ -110,7 +110,7 @@ Initialize(int argc, char **argv)
 	    argCount = 2;
 	}
 #ifdef USER_PROGRAM
-	if (!strcmp(*argv, "-s"))
+	if (!strcmp(*argv, "-s"))   //running user program step by step
 	    debugUserProg = TRUE;
 #endif
 #ifdef FILESYS_NEEDED

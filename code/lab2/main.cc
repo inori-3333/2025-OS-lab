@@ -11,11 +11,15 @@
 // Usage: nachos -d <debugflags> -rs <random seed #>
 //		-s -x <nachos file> -c <consoleIn> <consoleOut>
 //		-f -cp <unix file> <nachos file>
-//		-p <nachos file> -r <nachos file> -l -D -t
-//              -n <network reliability> -e <network orderability>
-//              -m <machine id>
-//              -o <other machine id>
-//              -z
+//		-p <nachos file> 
+//      -r <nachos file>
+//		-l
+//		-D
+//		-t
+//      -n <network reliability> -e <network orderability>
+//      -m <machine id>
+//      -o <other machine id>
+//      -z
 //
 //    -d causes certain debugging messages to be printed (cf. utility.h)
 //    -rs causes Yield to occur at random (but repeatable) spots
@@ -93,7 +97,7 @@ main(int argc, char **argv)
     SynchTest();
 #endif 
 #endif
-    
+
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
         if (!strcmp(*argv, "-z"))               // print copyright

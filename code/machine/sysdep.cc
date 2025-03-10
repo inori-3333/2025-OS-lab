@@ -68,7 +68,6 @@ int select(int numBits, void *readFds, void *writeFds, void *exceptFds,
 #endif
 #endif
 
-/*
 int unlink(char *name);
 int read(int filedes, char *buf, int numBytes);
 int write(int filedes, char *buf, int numBytes);
@@ -76,7 +75,6 @@ int lseek(int filedes, int offset, int whence);
 int tell(int filedes);
 int close(int filedes);
 int unlink(char *name);
-*/
 
 // definition varies slightly from platform to platform, so don't 
 // define unless gcc complains
