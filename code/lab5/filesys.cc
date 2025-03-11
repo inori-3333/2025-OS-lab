@@ -210,11 +210,24 @@ FileSystem::Create(char *name, int initialSize)
             else {	
                     success = TRUE;
                     // everthing worked, flush all changes back to disk
-                    
+                    if(isDir){
+                        hdr->HeaderCreateInit(DirFileExt);
+                    }
+                    else
+                        hdr->HeaderCreateInit(getFileExtention(name));//新增代码 inori333
 
+                    hdr->WriteBack(sector); 
                     
-                    hdr->WriteBack(sector); 		
-                    directory->WriteBack(directoryFile);
+                    if(isDir){
+                        Directory *dir=new Directory(NumDirEntries);
+                        OpenFile *sdubDirFile = new OpenFile(sector);
+                        dir->WriteBack(sdubDirFile);
+                        delete dir;
+                        delete sdubDirFile;
+                    }
+                    directory->WriteBack(dirFile);
+                    delete dirFile;//end inori333
+                    //directory->WriteBack(directoryFile);
                     freeMap->WriteBack(freeMapFile);
             }
                 delete hdr;
