@@ -83,6 +83,10 @@ class FileSystem {
 
     OpenFile* Open(char *name); 	// Open a file (UNIX open)
 
+	void *FindDir(char *filepath); // 新增代码 inori333
+	
+    int FindDirSector(char *filepath); // 新增代码 inori333
+
     bool Remove(char *name);  		// Delete a file (UNIX unlink)
 
     bool RemoveDir(char *name);//新增代码 inori333

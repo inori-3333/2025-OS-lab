@@ -73,12 +73,14 @@ class FileHeader {
     void Print();			// Print the contents of the file.
 
     char* getFileType(){return strdup(fileType);}//新增代码 inori333
+    void HeaderCreateInit(const char* type) { strncpy(fileType, type, sizeof(fileType) - 1); fileType[sizeof(fileType) - 1] = '\0'; } // 新增代码 inori333
 
   private:
     int numBytes;			// Number of bytes in the file
     int numSectors;			// Number of data sectors in the file
     int dataSectors[NumDirect];		// Disk sector numbers for each data 
 					// block in the file
+    char fileType[10];
 };
 
 #endif // FILEHDR_H
