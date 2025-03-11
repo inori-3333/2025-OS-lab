@@ -26,6 +26,10 @@ StartProcess(char *filename)
     OpenFile *executable = fileSystem->Open(filename);
     AddrSpace *space;
 
+    //add by inori333
+    space->Print();
+    //end inori333
+
     if (executable == NULL) {
 	printf("Unable to open file %s\n", filename);
 	return;
