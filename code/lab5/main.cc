@@ -61,6 +61,7 @@ extern void NAppend(char *nachosFile1, char *nachosFile2);//修改代码 原为e
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+extern void MakeDir(char *dirname);//新增代码 inori333
 
 
 //----------------------------------------------------------------------
@@ -148,6 +149,23 @@ main(int argc, char **argv)
 	} else if (!strcmp(*argv, "-t")) {	// performance test
             PerformanceTest();
 	}
+	//新增代码 inori333
+	  else if (!strcmp(*argv, "-mkdir")){
+	    ASSERT(argc > 1);
+	    MakeDir(*(argv + 1));//新增代码 inori333
+	    argCount = 2;
+	}
+	  else if(!strcmp(*argv, "-rd")){
+		ASSERT(argc > 1);
+	    bool success = fileSystem->RemoveDir(*(argv + 1));//新增代码 inori333
+		argCount = 2;
+	}
+	  else if(!strcmp(*argv, "-ld")){
+		ASSERT(argc > 1);
+	    fileSystem->ListDir(*(argv + 1));//新增代码 inori333
+		argCount = 2;
+	}
+	//end inori333
 #endif // FILESYS
 #ifdef NETWORK
         if (!strcmp(*argv, "-o")) {

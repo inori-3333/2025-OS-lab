@@ -37,6 +37,35 @@
 //	"fileSize" is the bit map of free disk sectors
 //----------------------------------------------------------------------
 
+//inori333: 新增代码，实现FilePath pathParser(char* path)
+FilePath pathParser(char* path) {
+  if (path[0]=='/'){
+    path=&path[1];//去掉开头的'/'
+  }
+  char * ts1 = strdup(path);//复制path
+  char * ts2 = strdup(path);//
+  FilePath filepath;
+  char* currentDir = dirname(ts1);//获取当前目录
+  filepath.base = strdup(basename(ts2));//获取文件名
+  //统计目录深度
+  int depth;
+  for (depth=0;path[depth];path[depth]=='/'?depth++:*path++);
+  filepath.dirDepth = depth;
+    //解析目录
+  ASSERT(depth<=MAX_DIR_DEPTH);
+    //
+  while(strcmp(currentDir,".")){
+    filepath.dirArray[--depth]=strdup(basename(currentDir));
+    currentDir = dirname(currentDir);
+  }
+  return filepath;
+}
+//end inori333
+
+
+
+
+
 //新增代码9行，实现FileHeader::FileHeader
 FileHeader::FileHeader()
 { 

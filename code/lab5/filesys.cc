@@ -64,6 +64,7 @@
 #define NumDirEntries 		10
 #define DirectoryFileSize 	(sizeof(DirectoryEntry) * NumDirEntries)
 
+#define DirFileExt "DirF"//新增代码 inori333
 //----------------------------------------------------------------------
 // FileSystem::FileSystem
 // 	Initialize the file system.  If format = TRUE, the disk has
@@ -179,8 +180,15 @@ FileSystem::Create(char *name, int initialSize)
     FileHeader *hdr;
     int sector;
     bool success;
-
-    DEBUG('f', "Creating file %s, size %d\n", name, initialSize);
+    bool isDir = false;//新增代码 inori333
+    if(initialSize == -1){//新增代码 inori333
+        isDir = true;
+        initialSize = DirectoryFileSize;
+        DEBUG('f', "Creating directory %s, size %d\n", name, initialSize);
+    }//新增代码 inori333
+    else{
+        DEBUG('f', "Creating file %s, size %d\n", name, initialSize);
+    }//新增代码 inori333  
 
     directory = new Directory(NumDirEntries);
     directory->FetchFrom(directoryFile);
@@ -195,19 +203,22 @@ FileSystem::Create(char *name, int initialSize)
             success = FALSE;		// no free block for file header 
         else if (!directory->Add(name, sector))
             success = FALSE;	// no space in directory
-	else {
+	    else {
     	    hdr = new FileHeader;
-	    if (!hdr->Allocate(freeMap, initialSize))
-            	success = FALSE;	// no space on disk for data
-	    else {	
-	    	success = TRUE;
-		// everthing worked, flush all changes back to disk
-    	    	hdr->WriteBack(sector); 		
-    	    	directory->WriteBack(directoryFile);
-    	    	freeMap->WriteBack(freeMapFile);
-	    }
-            delete hdr;
-	}
+            if (!hdr->Allocate(freeMap, initialSize))
+                    success = FALSE;	// no space on disk for data
+            else {	
+                    success = TRUE;
+                    // everthing worked, flush all changes back to disk
+                    
+
+                    
+                    hdr->WriteBack(sector); 		
+                    directory->WriteBack(directoryFile);
+                    freeMap->WriteBack(freeMapFile);
+            }
+                delete hdr;
+        }
         delete freeMap;
     }
     delete directory;
@@ -350,3 +361,44 @@ BitMap* FileSystem::getBitMap() {
 void FileSystem::setBitMap(BitMap* freeMap) { 
     freeMap->WriteBack(freeMapFile); 
 }
+//新增代码 inori333
+void * FileSystem::FindDir(char *filepath) {//新增代码 inori333
+    Directory *returnDir = new Directory(NumDirEntries);
+    int sector = FindDirSector(filepath);
+    if (sector == DirectorySector){
+        returnDir->FetchFrom(directoryFile);
+    }
+    else if(sector!=1){
+        OpenFile *dirFile = new OpenFile(sector);
+        returnDir->FetchFrom(dirFile);
+        delete dirFile;
+    }
+    else{
+        DEBUG('D',"No such directory.(might be deleted)\n");
+    }
+    return (void *)returnDir;//返回目录指针: 目标文件的目录结构
+}
+//end inori333
+
+//新增代码 inori333
+int FileSystem::FindDirSector(char *filepath) {
+    FilePath filepath = pathParser(filepath);
+    int sector = DirectorySector;
+    if(filepath.dirDepth!=0){
+        OpenFile* dirFile;
+        Directory* dirTemp;
+        for(int i=0;i<filepath.dirDepth;i++){
+            DEBUG('D',"Finding directory\"%s\"in sector\"%d\"\n",filepath.dirArray[i].sector);
+            dirFile = new OpenFile(sector);
+            dirTemp = new Directory(NumDirEntries);
+            dirTemp->FetchFrom(dirFile);
+            sector = dirTemp->Find(filepath.dirArray[i]);
+            if(sector==-1)
+                break;        
+    }
+    delete dirFile;
+    delete dirTemp;
+    }
+    return sector;//返回目录所在扇区号
+}
+//end inori333

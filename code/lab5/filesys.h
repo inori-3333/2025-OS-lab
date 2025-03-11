@@ -64,7 +64,8 @@ class FileSystem {
       }
 
     bool Remove(char *name) { return (bool)(Unlink(name) == 0); }
-
+    void * FindDir(char *filepath);//新增代码 inori333
+	int FindDirSector(char *filepath);//新增代码 inori333
 };
 
 #else // FILESYS

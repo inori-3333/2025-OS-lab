@@ -16,9 +16,11 @@
 
 #include "disk.h"
 #include "bitmap.h"
+#include "libgen.h"//inori333: add libgen.h to use basename() function
 
 #define NumDirect 	((SectorSize - 2 * sizeof(int)) / sizeof(int))
 #define MaxFileSize 	(NumDirect * SectorSize)
+#define MAX_DIR_DEPTH 5 //inori333: add MAX_DIR_DEPTH to limit the depth of directory
 
 // The following class defines the Nachos "file header" (in UNIX terms,  
 // the "i-node"), describing where on disk to find all of the data in the file.
@@ -34,6 +36,15 @@
 // There is no constructor; rather the file header can be initialized
 // by allocating blocks for the file (if it is a new file), or by
 // reading it from disk.
+
+//inori333: add FilePath struct to store the path of the file
+typedef struct {
+  char* dirArray[MAX_DIR_DEPTH];
+  int dirDepth; // 目录深度，如果为0，则为根目录
+  char* base;
+} FilePath;
+//end inori333
+extern FilePath pathParser(char* path);//实现文件路径解析功能 inori333
 
 class FileHeader {
   public:
