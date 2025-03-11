@@ -72,6 +72,8 @@ class FileHeader {
 
     void Print();			// Print the contents of the file.
 
+    char* getFileType(){return strdup(fileType);}//新增代码 inori333
+
   private:
     int numBytes;			// Number of bytes in the file
     int numSectors;			// Number of data sectors in the file

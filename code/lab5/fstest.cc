@@ -382,3 +382,8 @@ PerformanceTest()
     stats->Print();
 }
 
+void MakeDir(char *name){
+    DEBUG('D',"Making directory %s\n",dirname);
+    fileSystem->Create(dirname,-1);
+}
+

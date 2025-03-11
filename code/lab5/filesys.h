@@ -85,9 +85,13 @@ class FileSystem {
 
     bool Remove(char *name);  		// Delete a file (UNIX unlink)
 
-    void List();			// List all the files in the file system
+    bool RemoveDir(char *name);//新增代码 inori333
+	
+	void List();			// List all the files in the file system
 
-    void Print();			// List all the files and their contents
+    void ListDir(char *name);//新增代码 inori333
+	
+	void Print();			// List all the files and their contents
 	
 	void setBitMap(BitMap* freeMap);//新增代码 获取空闲块位示图文件	
 	

@@ -65,6 +65,7 @@
 #define DirectoryFileSize 	(sizeof(DirectoryEntry) * NumDirEntries)
 
 #define DirFileExt "DirF"//新增代码 inori333
+#define IsDirFile(filehdr) (!strcmp(fileHdr->getFileType(),DirFileExt))//新增代码 inori333
 //----------------------------------------------------------------------
 // FileSystem::FileSystem
 // 	Initialize the file system.  If format = TRUE, the disk has
@@ -256,6 +257,11 @@ FileSystem::Open(char *name)
     int sector;
 
     DEBUG('f', "Opening file %s\n", name);
+    directory = (Directory*)FindDir(name);
+    FilePath filepath = pathParser(name);
+    if(filepath.dirDepth==0){
+        name = filepath.base;
+    }
     directory->FetchFrom(directoryFile);
     sector = directory->Find(name); 
     if (sector >= 0) 		
@@ -285,6 +291,15 @@ FileSystem::Remove(char *name)
     BitMap *freeMap;
     FileHeader *fileHdr;
     int sector;
+
+    //新增代码 inori333
+    directory = (Directory*)FindDir(name);
+    FilePath filepath = pathParser(name);
+    if(filepath.dirDepth==0){
+        name = filepath.base;
+    }
+    //end inori333
+    
     
     directory = new Directory(NumDirEntries);
     directory->FetchFrom(directoryFile);
@@ -293,8 +308,17 @@ FileSystem::Remove(char *name)
        delete directory;
        return FALSE;			 // file not found 
     }
+    
+    
     fileHdr = new FileHeader;
     fileHdr->FetchFrom(sector);
+
+    if(IsDirFile(fileHdr)){
+        DEBUG('D',"Reject the remove operation (attempt to delete a directory)\n");
+        delete directory;
+        delete fileHdr;
+        return FALSE;
+    }
 
     freeMap = new BitMap(NumSectors);
     freeMap->FetchFrom(freeMapFile);
@@ -309,7 +333,40 @@ FileSystem::Remove(char *name)
     delete directory;
     delete freeMap;
     return TRUE;
-} 
+}
+
+bool
+FileSystem::RemoveDir(char *name)
+{ 
+    Directory *directory;
+    BitMap *freeMap;
+    FileHeader *fileHdr;
+    int sector;
+    
+    directory = (Directory*)FindDir(name);
+    FilePath filepath = pathParser(name);
+    if(filepath.dirDepth==0){
+        name = filepath.base;
+    }
+    sector = directory->Find(name);
+    if (sector == -1) {
+       delete directory;
+       return FALSE;			 // file not found 
+    }
+    fileHdr = new FileHeader;
+    fileHdr->FetchFrom(sector);
+    freemap = new BitMap(NumSectors);
+    freemap->FetchFrom(freeMapFile);
+    fileHdr->Deallocate(freeMap);  		// remove data blocks
+    freeMap->Clear(sector);			// remove header block
+    directory->Remove(name);
+    freeMap->WriteBack(freeMapFile);		// flush to disk
+    directory->WriteBack(directoryFile);        // flush to disk
+    delete fileHdr;
+    delete directory;
+    delete freeMap;
+    return TRUE;
+}//end inori333
 
 //----------------------------------------------------------------------
 // FileSystem::List
@@ -335,6 +392,17 @@ FileSystem::List()
 //	      the contents of the file header
 //	      the data in the file
 //----------------------------------------------------------------------
+
+//新增代码 inori333
+void
+FileSystem::ListDir(char *name)
+{
+    printf("List Directory %s\n",name);
+    Directory *directory = (Directory*)FindDir(strcat(name,"\arbitary"));
+    directory->List();
+    delete directory;
+}
+//end inori333
 
 void
 FileSystem::Print()
